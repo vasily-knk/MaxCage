@@ -28,6 +28,11 @@ namespace NamedPipes
             return data[advance(1)];
         }
 
+        public float ReadFloat()
+        {
+            return BitConverter.ToSingle(data, advance(4));
+        }
+
         public string ReadString()
         {
             int len = ReadInt32();
@@ -40,6 +45,17 @@ namespace NamedPipes
             T entry = new T();
             entry.readFrom(this);
             return entry;
+        }
+
+        public T[] ReadGenericArray<T>()
+            where T : IFromBytes, new()
+        {
+            uint size = ReadUInt32();
+            var data = new T[size];
+            for (int i = 0; i < size; ++i)
+                data[i] = ReadGeneric<T>();
+
+            return data;
         }
 
         private int advance(int offset)

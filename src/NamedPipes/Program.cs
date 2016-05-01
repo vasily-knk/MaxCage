@@ -5,10 +5,12 @@ using System.Threading;
 namespace NamedPipes
 {
     using EntityId = UInt32;
+    using ModelId = UInt32;
 
     class Program
     {
         static Dictionary<EntityId, EntityData> ents_ = new Dictionary<EntityId, EntityData>();
+        static Dictionary<ModelId, Model> models_ = new Dictionary<ModelId, Model>();
 
         static void OnMsgAddEntity(MsgAddEntity msg)
         {
@@ -26,7 +28,14 @@ namespace NamedPipes
         static void OnMsgUpdateEntityTransform(MsgUpdateEntityTransform msg)
         {
             EntityData data = ents_[msg.id];
-            Console.WriteLine("Updating entity: {0}", data.getText());
+            data.transform = msg.transform;
+            Console.WriteLine("Updating entity transform: {0}", data.getText());
+        }
+
+        static void OnMsgAddModel(MsgAddModel msg)
+        {
+            models_.Add(msg.id, msg.model);
+            Console.WriteLine("Adding model: {0}, {1} verts", msg.model.name, msg.model.verts.Length);
         }
 
         static void OnNextFrame(MsgNextFrame msg)
@@ -40,7 +49,8 @@ namespace NamedPipes
             dispatcher.Add<MsgAddEntity>(0, OnMsgAddEntity);
             dispatcher.Add<MsgDeleteEntity>(1, OnMsgDeleteEntity);
             dispatcher.Add<MsgUpdateEntityTransform>(2, OnMsgUpdateEntityTransform);
-            dispatcher.Add<MsgNextFrame>(3, OnNextFrame);
+            dispatcher.Add<MsgAddModel>(3, OnMsgAddModel);
+            dispatcher.Add<MsgNextFrame>(100, OnNextFrame);
 
             using (var server = new Server("my_pipe", dispatcher))
             {
