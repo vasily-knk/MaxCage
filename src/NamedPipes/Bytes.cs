@@ -34,6 +34,14 @@ namespace NamedPipes
             return Encoding.ASCII.GetString(data, advance(len), len);
         }
 
+        public T ReadGeneric<T>()
+            where T : IFromBytes, new()
+        {
+            T entry = new T();
+            entry.readFrom(this);
+            return entry;
+        }
+
         private int advance(int offset)
         {
             int result = pos;

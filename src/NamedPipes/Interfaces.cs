@@ -19,6 +19,6 @@ namespace NamedPipes
 
     interface IFromBytes
     {
-        void readFrom(ref Bytes bytes);
+        void readFrom(Bytes bytes);
     }
 }

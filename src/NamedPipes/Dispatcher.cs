@@ -50,7 +50,7 @@ namespace NamedPipes
             var value = new T();
 
             var bytesWrapper = new Bytes(bytes);
-            value.readFrom(ref bytesWrapper);
+            value.readFrom(bytesWrapper);
             return value;
         }
 
