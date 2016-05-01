@@ -7,21 +7,35 @@ namespace NamedPipes
 {
     class Server
         : IDisposable
+        , IServer
     {
+        private string pipeName_;
         private NamedPipeServerStream pipe_;
+        private IBytesProcessor processor_;
 
-        public bool isWorking { get; private set; } = true;
-
-        public Server(string pipeName)
+        public bool isWorking()
         {
-            pipe_ = new NamedPipeServerStream(pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            return pipe_ != null;
+        }
+
+        public Server(string pipeName, IBytesProcessor processor)
+        {
+            pipeName_ = pipeName;
+            processor_ = processor;
+        }
+
+        public void Start()
+        {
+            pipe_ = new NamedPipeServerStream(pipeName_, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
             Console.WriteLine("Waiting for connection");
             pipe_.BeginWaitForConnection(this.OnConnection, null);
         }
 
         public void Dispose()
         {
-            pipe_.Close();
+            if (pipe_ != null)
+                pipe_.Close();
+            pipe_ = null;
         }
 
         private void OnConnection(IAsyncResult result)
@@ -33,36 +47,46 @@ namespace NamedPipes
 
         private void Ready()
         {
-            var buffer = new byte[4];
-            pipe_.BeginRead(buffer, 0, buffer.Length, OnLength, buffer);
+            var buffer = new byte[8];
+            pipe_.BeginRead(buffer, 0, buffer.Length, OnHeader, buffer);
         }
 
-        private void OnLength(IAsyncResult result)
+        private bool ProcessCount(int count, int expected)
         {
-            int count = pipe_.EndRead(result);
-            var sizeBuffer = (byte[])result.AsyncState;
-
-            uint msgLength = BitConverter.ToUInt32(sizeBuffer, 0);
-
-            if (msgLength == 0)
+            if (count == 0)
             {
-                isWorking = false;
-                return;
+                Dispose();
+                return false;
             }
 
-            var msgBuffer = new byte[msgLength];
-            pipe_.BeginRead(msgBuffer, 0, (int)msgLength, OnMessage, msgBuffer);
+            return true;
+        }
+
+        private class MessageData
+        {
+            public byte[] buffer;
+            public uint length;
+            public int msgId;
+        }
+
+        private void OnHeader(IAsyncResult result)
+        {
+            if (!ProcessCount(pipe_.EndRead(result), 8))
+                return;
+
+            var hdrBuffer = (byte[])result.AsyncState;
+            int msgId = BitConverter.ToInt32(hdrBuffer, 0);
+            uint msgLength = BitConverter.ToUInt32(hdrBuffer, 4);
+
+            var msgData = new MessageData { buffer = new byte[msgLength], length = msgLength, msgId = msgId };
+            pipe_.BeginRead(msgData.buffer, 0, (int)msgLength, OnMessage, msgData);
         }
 
         private void OnMessage(IAsyncResult result)
         {
-            int count = pipe_.EndRead(result);
-            var msgBuffer = (byte[])result.AsyncState;
+            var msgData = (MessageData)result.AsyncState;
 
-            string text = Encoding.ASCII.GetString(msgBuffer);
-
-            Console.WriteLine("Message: {0}", text);
-
+            processor_.Process(msgData.msgId, msgData.buffer);
             Ready();
         }
     }
