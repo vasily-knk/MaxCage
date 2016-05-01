@@ -13,12 +13,14 @@ namespace NamedPipes
             this.data = data;
         }
 
-        public byte[] data { get; private set; }
-        public int pos { get; set; } = 0;
-
         public int ReadInt32()
         {
             return BitConverter.ToInt32(data, advance(4));
+        }
+
+        public uint ReadUInt32()
+        {
+            return BitConverter.ToUInt32(data, advance(4));
         }
 
         public int ReadByte()
@@ -38,5 +40,8 @@ namespace NamedPipes
             pos += offset;
             return result;
         }
+
+        private byte[] data;
+        private int pos = 0;
     }
 }

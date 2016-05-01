@@ -74,9 +74,10 @@ namespace NamedPipes
             if (!ProcessCount(pipe_.EndRead(result), 8))
                 return;
 
-            var hdrBuffer = (byte[])result.AsyncState;
-            int msgId = BitConverter.ToInt32(hdrBuffer, 0);
-            uint msgLength = BitConverter.ToUInt32(hdrBuffer, 4);
+            var hdrBytes = new Bytes((byte[])result.AsyncState);
+
+            uint msgLength = hdrBytes.ReadUInt32();
+            int msgId = hdrBytes.ReadInt32();
 
             var msgData = new MessageData { buffer = new byte[msgLength], length = msgLength, msgId = msgId };
             pipe_.BeginRead(msgData.buffer, 0, (int)msgLength, OnMessage, msgData);

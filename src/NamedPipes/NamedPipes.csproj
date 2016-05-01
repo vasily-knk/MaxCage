@@ -60,7 +60,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bytes.cs" />
-    <Compile Include="BytesConverter.cs" />
     <Compile Include="Dispatcher.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Program.cs" />
