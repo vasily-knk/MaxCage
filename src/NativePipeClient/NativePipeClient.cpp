@@ -12,10 +12,24 @@ int main()
         Sleep(1000);
     }
     
+    cout << "Connected to pipe" << endl;
 
-    char a = 117;
-    DWORD len = 0;
-    WriteFile(pipe, &a, 1, &len, NULL);
+    vector<string> messages = 
+    {
+        "Fuck", "you", "you", "fucking", "cunt"
+    };
+
+    for (string const &message : messages)
+    {
+        DWORD sent_len = 0;
+
+        uint32_t size = message.length();
+        WriteFile(pipe, &size, 4, &sent_len, NULL);
+        WriteFile(pipe, message.c_str(), size, &sent_len, NULL);
+        Sleep(2000);
+    }
+
+    cout << "Messages sent" << endl;
 
     CloseHandle(pipe);
     return 0;
