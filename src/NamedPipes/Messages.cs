@@ -59,6 +59,17 @@ namespace NamedPipes
         }
     }
 
+    struct Mesh
+        : IFromBytes
+    {
+        public int[] indices;
+
+        public void readFrom(Bytes bytes)
+        {
+            indices = bytes.ReadInt32Array();
+        }
+    }
+
     class EntityData
         : IFromBytes
     {
@@ -84,11 +95,13 @@ namespace NamedPipes
     {
         public string name { get; private set; }
         public Vertex[] verts { get; private set; }
+        public Mesh[] meshes { get; private set; }
 
         public void readFrom(Bytes bytes)
         {
             name = bytes.ReadString();
             verts = bytes.ReadGenericArray<Vertex>();
+            meshes = bytes.ReadGenericArray<Mesh>();
         }
     }
 

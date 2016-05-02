@@ -50,12 +50,26 @@ namespace NamedPipes
         public T[] ReadGenericArray<T>()
             where T : IFromBytes, new()
         {
-            uint size = ReadUInt32();
-            var data = new T[size];
-            for (int i = 0; i < size; ++i)
+            var data = CreateArray<T>();
+            for (int i = 0; i < data.Length; ++i)
                 data[i] = ReadGeneric<T>();
 
             return data;
+        }
+
+        public int[] ReadInt32Array()
+        {
+            var data = CreateArray<int>();
+            for (int i = 0; i < data.Length; ++i)
+                data[i] = ReadInt32();
+
+            return data;
+        }
+
+        private T[] CreateArray<T>()
+        {
+            uint size = ReadUInt32();
+            return new T[size];
         }
 
         private int advance(int offset)

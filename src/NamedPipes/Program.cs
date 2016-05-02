@@ -52,7 +52,7 @@ namespace NamedPipes
             dispatcher.Add<MsgAddModel>(3, OnMsgAddModel);
             dispatcher.Add<MsgNextFrame>(100, OnNextFrame);
 
-            using (var server = new Server("my_pipe", dispatcher))
+            using (var server = new TcpServer(dispatcher))
             {
                 server.Start();
 
