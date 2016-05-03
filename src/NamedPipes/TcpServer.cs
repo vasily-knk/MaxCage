@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace NamedPipes
 {
@@ -17,11 +16,12 @@ namespace NamedPipes
         private class ReadBuffer
         {
             public byte[] data { get; private set; }
-            public int pos { get; set; } = 0;
+            public int pos { get; set; }
 
             public ReadBuffer(int size)
             {
                 data = new byte[size];
+                pos = 0;
             }
         }
 
@@ -104,7 +104,7 @@ namespace NamedPipes
 
         private void Ready()
         {
-            var buffer = new ReadBuffer(8);
+            var buffer = new ReadBuffer(12);
             ReadAll<byte[]>(buffer, OnHeader, buffer.data, Disconnect);
         }
 
@@ -112,6 +112,16 @@ namespace NamedPipes
         {
             var hdrBuffer = (byte[])arg;
             var hdrBytes = new Bytes(hdrBuffer);
+
+            uint magic = hdrBytes.ReadUInt32();
+            if (magic != 117)
+            {
+                UnityEngine.Debug.LogErrorFormat("Invalid magic: {0} !!!", magic);
+                return;
+            }
+            else
+            {
+            }
 
             uint msgLength = hdrBytes.ReadUInt32();
             if (msgLength == 0)
@@ -131,7 +141,7 @@ namespace NamedPipes
         private void OnMessage(object arg)
         {
             var msgData = (MessageData)arg;
-            var buffer = msgData.buffer;
+
 
             processor_.Process(msgData.msgId, msgData.buffer);
             Ready();
