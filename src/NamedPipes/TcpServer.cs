@@ -119,22 +119,19 @@ namespace NamedPipes
                 UnityEngine.Debug.LogErrorFormat("Invalid magic: {0} !!!", magic);
                 return;
             }
-            else
-            {
-            }
 
             uint msgLength = hdrBytes.ReadUInt32();
+            int msgId = hdrBytes.ReadInt32();
+            var msgBuffer = new ReadBuffer((int)msgLength);
+            var msgData = new MessageData { buffer = msgBuffer.data, msgId = msgId };
+
             if (msgLength == 0)
             {
-                Ready();
+                OnMessage(msgData);
                 return;
             }
 
 
-            int msgId = hdrBytes.ReadInt32();
-
-            var msgBuffer = new ReadBuffer((int)msgLength);
-            var msgData = new MessageData { buffer = msgBuffer.data, msgId = msgId };
             ReadAll<MessageData>(msgBuffer, OnMessage, msgData, Disconnect);
         }
 
@@ -161,7 +158,6 @@ namespace NamedPipes
         public void Dispose()
         {
         }
-
 
     }
 }

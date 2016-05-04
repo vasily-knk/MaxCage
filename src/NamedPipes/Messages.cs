@@ -6,8 +6,60 @@ using UnityEngine;
 
 namespace NamedPipes
 {
-    using EntityId = UInt32;
-    using ModelId = UInt32;
+    struct EntityId
+        : IFromBytes
+        , IEquatable<EntityId>
+    {
+        private uint id;
+
+        public bool initialized()
+        {
+            return id != 0;
+        }
+
+        public override string ToString() 
+        {
+            return id.ToString();
+        }
+
+        public void readFrom(Bytes bytes)
+        {
+            id = bytes.ReadUInt32();
+        }
+
+        public bool Equals(EntityId other)
+        {
+            return id == other.id;
+        }
+    }
+
+    struct ModelId
+        : IFromBytes
+        , IEquatable<ModelId>
+    {
+        private uint id;
+
+        public bool initialized()
+        {
+            return id != 0;
+        }
+
+        public override string ToString()
+        {
+            return id.ToString();
+        }
+
+        public void readFrom(Bytes bytes)
+        {
+            id = bytes.ReadUInt32();
+        }
+
+        public bool Equals(ModelId other)
+        {
+            return id == other.id;
+        }
+    }
+
 
     struct Vertex
         : IFromBytes
@@ -68,7 +120,7 @@ namespace NamedPipes
             classname = bytes.ReadString();
             name = bytes.ReadString();
             transform = bytes.Read<Transform>();
-            modelId = bytes.ReadUInt32();
+            modelId = bytes.Read<ModelId>();
         }
     }
 
@@ -95,7 +147,7 @@ namespace NamedPipes
 
         public void readFrom(Bytes bytes)
         {
-            id = bytes.ReadUInt32();
+            id = bytes.Read<EntityId>();
             data = bytes.Read<EntityData>();
         }
     }
@@ -107,7 +159,7 @@ namespace NamedPipes
 
         public void readFrom(Bytes bytes)
         {
-            id = bytes.ReadUInt32();
+            id = bytes.Read<EntityId>();
         }
     }
 
@@ -119,7 +171,7 @@ namespace NamedPipes
 
         public void readFrom(Bytes bytes)
         {
-            id = bytes.ReadUInt32();
+            id = bytes.Read<EntityId>();
             transform = bytes.Read<Transform>();
         }
     }
@@ -132,7 +184,7 @@ namespace NamedPipes
 
         public void readFrom(Bytes bytes)
         {
-            id = bytes.ReadUInt32();
+            id = bytes.Read<ModelId>();
             model = bytes.Read<Model>();
         }
     }

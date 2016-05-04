@@ -3,60 +3,71 @@ using System.Collections.Generic;
 using NamedPipes;
 using UnityEngine;
 
-using EntityId = System.UInt32;
-using ModelId = System.UInt32;
+class CageData
+{
+    private List<Pair<EntityId, EntityData>> entities_;
+    private List<Pair<ModelId, Model>> models_;
+    private List<Pair<EntityId, NamedPipes.Transform>> transforms_;
 
-    class CageData
+    public CageData()
     {
-        public Dictionary<EntityId, EntityData> ents {get; private set;}
-        public Dictionary<ModelId, Model> modelsPending { get; private set; }
-        private List<EntityId> creationPending;
-        private List<EntityId> transformPending;
-        
-        public CageData()
-        {
-            ents = new Dictionary<EntityId, EntityData>();
-            modelsPending = new Dictionary<ModelId, Model>();
-            creationPending = new List<EntityId>();
-            transformPending = new List<EntityId>();
-        }
+        entities_ = new List<Pair<EntityId, EntityData>>();
+        models_ = new List<Pair<ModelId, Model>>();
+        transforms_ = new List<Pair<EntityId, NamedPipes.Transform>>();
+    }
 
-        public void AddEntity(EntityId id, EntityData data)
+    public void AddEntity(EntityId id, EntityData data)
+    {
+        lock(entities_)
         {
-            ents.Add(id, data);
-            creationPending.Add(id);
+            entities_.Add(Pair.New(id, data));
         }
+    }
 
-        public void AddModel(ModelId id, Model model)
+    public void AddModel(ModelId id, Model model)
+    {
+        lock (models_)
         {
-            modelsPending.Add(id, model);
+            models_.Add(Pair.New(id, model));
         }
+    }
 
-        public void UpdateEntityTransform(EntityId id, NamedPipes.Transform transform)
+    public void AddTransform(EntityId id, NamedPipes.Transform transform)
+    {
+        lock (transforms_)
         {
-            ents[id].transform = transform;
-            transformPending.Add(id);
+            transforms_.Add(Pair.New(id, transform));
         }
+    }
 
-        public List<EntityId> FlushCreation()
+    public List<Pair<EntityId, EntityData>> FlushEntities()
+    {
+        lock (entities_)
         {
-            var result = creationPending;
-            creationPending = new List<EntityId>();
+            var result = entities_;
+            entities_ = new List<Pair<EntityId, EntityData>>();
             return result;
         }
+    }
 
-        public List<EntityId> FlushTransform()
+    public List<Pair<ModelId, Model>> FlushModels()
+    {
+        lock (models_)
         {
-            var result = transformPending;
-            transformPending = new List<EntityId>();
+            var result = models_;
+            models_ = new List<Pair<ModelId, Model>>();
             return result;
         }
+    }
 
-        public Dictionary<ModelId, Model> FlushModels()
+    public List<Pair<EntityId, NamedPipes.Transform>> FlushTransforms()
+    {
+        lock (transforms_)
         {
-            var result = modelsPending;
-            modelsPending = new Dictionary<ModelId, Model>();
+            var result = transforms_;
+            transforms_ = new List<Pair<EntityId, NamedPipes.Transform>>();
             return result;
         }
 
     }
+}

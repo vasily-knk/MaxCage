@@ -4,9 +4,6 @@ using System.Threading;
 
 namespace NamedPipes
 {
-    using EntityId = UInt32;
-    using ModelId = UInt32;
-
     class Program
     {
         static Dictionary<EntityId, EntityData> ents_ = new Dictionary<EntityId, EntityData>();
